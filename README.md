@@ -5,7 +5,7 @@
 **High-performance SHA-1 partial password recovery engine**
 
 [![Python](https://img.shields.io/badge/Python-3.7%2B-blue?style=flat-square&logo=python)](https://www.python.org/)
-[![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)](https://github.com/awiones/SCrack/blob/main/LICENSE)
+[![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)](https://github.com/AlGhozaliRamadhan/SCrack/blob/main/LICENSE)
 [![GPU](https://img.shields.io/badge/GPU-CUDA%20Accelerated-76B900?style=flat-square&logo=nvidia)](https://developer.nvidia.com/cuda-toolkit)
 [![Platform](https://img.shields.io/badge/Platform-Linux%20%7C%20Windows%20%7C%20macOS-lightgrey?style=flat-square)]()
 
@@ -158,7 +158,7 @@ pip install -r requirements.txt
 
 ## License
 
-This project is licensed under the **MIT License** see the [LICENSE](https://github.com/awiones/SCrack/blob/main/LICENSE) file for full details.
+This project is licensed under the **MIT License** see the [LICENSE](https://github.com/AlGhozaliRamadhan/SCrack/blob/main/LICENSE) file for full details.
 
 ---
 
