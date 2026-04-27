@@ -1,5 +1,4 @@
 MIT License
-
 Copyright (c) 2026 AGR
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -19,3 +18,15 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
+
+---
+
+Additional Terms — Ethical Use
+
+This software is intended solely for lawful purposes, including authorized
+penetration testing, personal password recovery on hashes you own, and
+security research. Use of this software against systems, accounts, or data
+you do not own or have explicit written permission to test is strictly
+prohibited and may violate applicable laws.
+
+The authors accept no liability for misuse of this software.
