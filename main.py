@@ -27,11 +27,9 @@ except ImportError:
     GPU_TYPE = None
     print("CuPy not found - GPU acceleration not available - using CPU with multiprocessing")
 
-# Target Configuration
-TARGET_HASH = "eb527fdfdc0320f3d2d5f9684f613647dc001dcd" # Hash to decrypt - change this value to target a different hash
-TARGET_PREFIX = "@Aika" # Target prefix - only put the showed password prefix here dont put the * on
+TARGET_HASH = "Here" # Hash to decrypt - change this value to target a different hash
+TARGET_PREFIX = "Here" # Target prefix - only put the showed password prefix here dont put the * on
 
-# Analysis Parameters
 MAX_SEARCH_SPACE = 100000000000  # Increased for longer passwords
 PROGRESS_UPDATE_FREQUENCY = 10000
 BATCH_SIZE = 100000  # Process batches for better performance
