@@ -24,10 +24,19 @@ CPU mode works without CuPy. GPU mode requires a CUDA-compatible NVIDIA GPU.
 
 ## Install
 
+Fresh clone:
+
 ```bash
 git clone https://github.com/AlGhozaliRamadhan/SCrack.git
 cd SCrack
 python -m venv .venv
+```
+
+Update an existing copy:
+
+```bash
+cd SCrack
+git pull
 ```
 
 GPU install on Windows:
@@ -104,11 +113,20 @@ Notes:
 1. Create a notebook.
 2. Enable GPU in notebook settings.
 3. Use a GPU accelerator. Multi-GPU runs only when Kaggle exposes more than one CUDA device to the notebook.
-4. Run:
+4. Run this cell. It clones the repo if missing, otherwise updates it with `git pull`.
 
 ```python
-!git clone https://github.com/AlGhozaliRamadhan/SCrack.git
-%cd SCrack
+import os
+
+repo_path = "/kaggle/working/SCrack"
+
+if os.path.exists(repo_path):
+    %cd /kaggle/working/SCrack
+    !git pull
+else:
+    !git clone https://github.com/AlGhozaliRamadhan/SCrack.git /kaggle/working/SCrack
+    %cd /kaggle/working/SCrack
+
 !pip install -q cupy-cuda12x numpy
 !python main.py --sha 40b25eac438260c9ad4e3142adc38a8d0885e5f3 --pw a
 ```
@@ -123,11 +141,20 @@ Check visible GPUs:
 
 1. Open Runtime > Change runtime type.
 2. Select a GPU runtime.
-3. Run:
+3. Run this cell. It clones the repo if missing, otherwise updates it with `git pull`.
 
 ```python
-!git clone https://github.com/AlGhozaliRamadhan/SCrack.git
-%cd SCrack
+import os
+
+repo_path = "/content/SCrack"
+
+if os.path.exists(repo_path):
+    %cd /content/SCrack
+    !git pull
+else:
+    !git clone https://github.com/AlGhozaliRamadhan/SCrack.git /content/SCrack
+    %cd /content/SCrack
+
 !pip install -q cupy-cuda12x numpy
 !python main.py --sha 40b25eac438260c9ad4e3142adc38a8d0885e5f3 --pw a
 ```
