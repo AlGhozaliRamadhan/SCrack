@@ -18,12 +18,20 @@ from module.engine import CrackEngine
 from module.workers import stop_signal
 
 
+VERSION = "2.1"
+
+
 def parse_args() -> argparse.Namespace:
     """Parse command-line arguments."""
     parser = argparse.ArgumentParser(
         prog="SCrack",
         description="SHA-1 Hash Recovery Tool with GPU Acceleration",
         epilog="Example: python main.py --sha 5baa61e4c9b93f3f0682250b6cf8331b7ee68fd8 --pw pass",
+    )
+    parser.add_argument(
+        "--version",
+        action="version",
+        version=f"SCrack {VERSION}",
     )
     parser.add_argument(
         "--sha",

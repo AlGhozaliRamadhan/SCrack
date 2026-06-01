@@ -11,17 +11,22 @@ import ctypes
 import multiprocessing as mp
 from typing import Optional
 
-import numpy as np
-
 from .gpu import GPU_AVAILABLE
 
 if GPU_AVAILABLE:
+    import numpy as np
     import cupy as cp
     from .gpu import get_sha1_kernel
 
 
 # ─── Shared Stop Signal ─────────────────────────────────────────────────
 stop_signal = mp.Value(ctypes.c_bool, False)
+
+
+def set_stop_signal(shared_stop_signal):
+    """Point worker processes at the parent-owned stop signal."""
+    global stop_signal
+    stop_signal = shared_stop_signal
 
 
 def reset_stop_signal():
@@ -91,43 +96,47 @@ def cpu_worker(args) -> Optional[str]:
 
 def gpu_worker(prefix: str, charset: str, suffix_length: int,
                start_index: int, batch_size: int,
-               target_hash_hex: str) -> Optional[str]:
+               target_hash_hex: str, device_id: int = 0) -> Optional[str]:
     """Launch the GPU kernel to generate + hash candidates entirely on-GPU.
 
     Only sends prefix (~10 B), charset (~36 B), and scalar parameters
     instead of the previous 40M × 64 B candidate array.
     """
+    if not GPU_AVAILABLE:
+        raise RuntimeError("GPU worker called when GPU acceleration is unavailable")
+
     if stop_signal.value:
         return None
 
-    kernel = get_sha1_kernel()
+    with cp.cuda.Device(device_id):
+        kernel = get_sha1_kernel(device_id)
 
-    # Small, constant-size GPU arrays (transferred once per batch)
-    d_prefix  = cp.array(np.frombuffer(prefix.encode(), dtype=np.uint8))
-    d_charset = cp.array(np.frombuffer(charset.encode(), dtype=np.uint8))
-    d_target  = cp.array(np.frombuffer(bytes.fromhex(target_hash_hex), dtype='>u4'))
-    d_result  = cp.full(1, -1, dtype=cp.int32)
+        # Small, constant-size GPU arrays (transferred once per batch)
+        d_prefix = cp.array(np.frombuffer(prefix.encode(), dtype=np.uint8))
+        d_charset = cp.array(np.frombuffer(charset.encode(), dtype=np.uint8))
+        d_target = cp.array(np.frombuffer(bytes.fromhex(target_hash_hex), dtype='>u4'))
+        d_result = cp.full(1, -1, dtype=cp.int32)
 
-    # Launch kernel
-    threads_per_block = 256
-    blocks_per_grid = (batch_size + threads_per_block - 1) // threads_per_block
+        # Launch kernel
+        threads_per_block = 256
+        blocks_per_grid = (batch_size + threads_per_block - 1) // threads_per_block
 
-    kernel(
-        (blocks_per_grid,), (threads_per_block,),
-        (
-            d_prefix,
-            np.int32(len(prefix)),
-            d_charset,
-            np.int32(len(charset)),
-            np.int32(suffix_length),
-            np.int64(start_index),
-            np.int32(batch_size),
-            d_target,
-            d_result,
-        ),
-    )
+        kernel(
+            (blocks_per_grid,), (threads_per_block,),
+            (
+                d_prefix,
+                np.int32(len(prefix)),
+                d_charset,
+                np.int32(len(charset)),
+                np.int32(suffix_length),
+                np.int64(start_index),
+                np.int32(batch_size),
+                d_target,
+                d_result,
+            ),
+        )
 
-    found_offset = d_result.get()[0]
+        found_offset = d_result.get()[0]
     if found_offset != -1:
         return _reconstruct_password(
             prefix, charset, suffix_length, start_index + found_offset

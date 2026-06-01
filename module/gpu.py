@@ -9,18 +9,31 @@ eliminating the CPU→GPU data transfer bottleneck.
 # ─── GPU Capability Detection ───────────────────────────────────────────
 GPU_AVAILABLE = False
 GPU_NAME = None
+GPU_ERROR = None
+GPU_COUNT = 0
+GPU_DEVICE_IDS = []
+GPU_DEVICE_NAMES = []
 
 try:
     import cupy as cp
 
-    if cp.cuda.runtime.getDeviceCount() > 0:
+    GPU_COUNT = cp.cuda.runtime.getDeviceCount()
+    if GPU_COUNT > 0:
         GPU_AVAILABLE = True
-        GPU_NAME = "CuPy"
-        print("GPU acceleration enabled (CuPy)")
+        GPU_DEVICE_IDS = list(range(GPU_COUNT))
+        for device_id in GPU_DEVICE_IDS:
+            props = cp.cuda.runtime.getDeviceProperties(device_id)
+            name = props.get('name', f"CUDA Device {device_id}")
+            if isinstance(name, bytes):
+                name = name.decode('utf-8', errors='replace')
+            GPU_DEVICE_NAMES.append(name)
+        GPU_NAME = f"CuPy ({GPU_COUNT} GPU{'s' if GPU_COUNT != 1 else ''})"
     else:
-        print("CuPy found, but no compatible GPU detected - using CPU with multiprocessing")
+        GPU_ERROR = "CuPy found, but no compatible GPU detected"
 except ImportError:
-    print("CuPy not found - GPU acceleration not available - using CPU with multiprocessing")
+    GPU_ERROR = "CuPy not found"
+except Exception as exc:
+    GPU_ERROR = str(exc)
 
 
 # ─── CUDA SHA-1 Kernel Source ────────────────────────────────────────────
@@ -124,14 +137,17 @@ extern "C" {
 
 
 # ─── Kernel Cache ────────────────────────────────────────────────────────
-_compiled_kernel = None
+_compiled_kernels = {}
 
 
-def get_sha1_kernel():
-    """Compile and cache the CUDA SHA-1 kernel (one-time cost)."""
-    global _compiled_kernel
-    if _compiled_kernel is None:
-        print("Compiling CUDA kernel for GPU... (this happens only once)")
-        _compiled_kernel = cp.RawKernel(SHA1_KERNEL_SOURCE, 'sha1_crack_kernel')
-        print("Kernel compiled successfully.")
-    return _compiled_kernel
+def get_sha1_kernel(device_id: int = 0):
+    """Compile and cache the CUDA SHA-1 kernel for one GPU device."""
+    if device_id not in _compiled_kernels:
+        with cp.cuda.Device(device_id):
+            print(f"Compiling CUDA kernel for GPU {device_id}... (one-time cost)")
+            _compiled_kernels[device_id] = cp.RawKernel(
+                SHA1_KERNEL_SOURCE,
+                'sha1_crack_kernel',
+            )
+            print(f"Kernel compiled successfully on GPU {device_id}.")
+    return _compiled_kernels[device_id]

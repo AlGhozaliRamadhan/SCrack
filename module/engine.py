@@ -7,11 +7,10 @@ and prints summary reports on success or failure.
 
 import hashlib
 import time
-import sys
 from typing import Optional
 
 from .config import MAX_SEARCH_SPACE, GPU_BATCH_SIZE, CPU_BATCH_SIZE, NUM_CPU_WORKERS
-from .gpu import GPU_AVAILABLE, GPU_NAME
+from .gpu import GPU_AVAILABLE, GPU_DEVICE_NAMES, GPU_ERROR, GPU_NAME
 from .cracker import SHA1Cracker
 from .attacks import build_attack_vectors
 from .workers import stop_signal, reset_stop_signal
@@ -121,6 +120,10 @@ class CrackEngine:
         ]
 
         print(f"Acceleration: {backend}")
+        if GPU_AVAILABLE and GPU_DEVICE_NAMES:
+            print(f"GPU Devices: {', '.join(GPU_DEVICE_NAMES)}")
+        if not GPU_AVAILABLE and GPU_ERROR:
+            print(f"GPU Status: {GPU_ERROR}")
         print(f"Optimizations: {', '.join(opts)}")
         print(sep)
 

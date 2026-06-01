@@ -6,17 +6,66 @@ likely (short, common charsets) to exhaustive (long, wide charsets).
 """
 
 import string
-from typing import List
+from typing import List, Tuple
 
 from .models import AttackVector
 
 
-# ─── Charset Shortcuts ──────────────────────────────────────────────────
-LOWER   = string.ascii_lowercase
+LOWER = string.ascii_lowercase
 LETTERS = string.ascii_letters
-DIGITS  = string.digits
-ALNUM   = LETTERS + DIGITS
+DIGITS = string.digits
+ALNUM = LETTERS + DIGITS
 SYMBOLS = "!@#$%"
+
+AttackPlan = Tuple[int, int, str]
+
+ATTACK_PLAN: Tuple[AttackPlan, ...] = (
+    # Priority 1: Quick wins
+    (1, 1, LOWER + DIGITS),
+    (1, 2, LOWER + DIGITS),
+    (1, 3, LOWER + DIGITS),
+    (1, 4, LOWER),
+    (1, 4, LOWER + DIGITS),
+
+    # Priority 2: Moderate complexity
+    (2, 3, ALNUM),
+    (2, 4, LETTERS),
+    (2, 5, LOWER),
+    (2, 5, DIGITS),
+    (2, 6, DIGITS),
+
+    # Priority 3: Wider charsets
+    (3, 4, ALNUM + SYMBOLS),
+    (3, 5, LOWER + DIGITS),
+    (3, 5, LETTERS),
+    (3, 6, LOWER),
+    (3, 7, DIGITS),
+    (3, 8, DIGITS),
+
+    # Priority 4: Extended search
+    (4, 5, ALNUM),
+    (4, 6, LOWER + DIGITS),
+    (4, 7, LOWER),
+    (4, 9, DIGITS),
+    (4, 10, DIGITS),
+
+    # Priority 5: Deep search
+    (5, 6, LETTERS),
+    (5, 7, LOWER + DIGITS),
+    (5, 8, LOWER),
+    (5, 11, DIGITS),
+    (5, 12, DIGITS),
+
+    # Priority 6: Very deep search
+    (6, 7, LETTERS),
+    (6, 8, LOWER + DIGITS),
+    (6, 9, LOWER),
+
+    # Priority 7: Exhaustive
+    (7, 8, LETTERS),
+    (7, 9, LOWER + DIGITS),
+    (7, 10, LOWER),
+)
 
 
 def build_attack_vectors(prefix: str) -> List[AttackVector]:
@@ -33,53 +82,13 @@ def build_attack_vectors(prefix: str) -> List[AttackVector]:
     cheapest, most-likely vectors run first.
     """
     vectors = [
-        # ── Priority 1: Quick wins ──────────────────────────────────
-        AttackVector(prefix, suffix_length=1,  charset=LOWER + DIGITS,  priority=1),
-        AttackVector(prefix, suffix_length=2,  charset=LOWER + DIGITS,  priority=1),
-        AttackVector(prefix, suffix_length=3,  charset=LOWER + DIGITS,  priority=1),
-        AttackVector(prefix, suffix_length=4,  charset=LOWER,           priority=1),
-        AttackVector(prefix, suffix_length=4,  charset=LOWER + DIGITS,  priority=1),
-
-        # ── Priority 2: Moderate complexity ─────────────────────────
-        AttackVector(prefix, suffix_length=3,  charset=ALNUM,           priority=2),
-        AttackVector(prefix, suffix_length=4,  charset=LETTERS,         priority=2),
-        AttackVector(prefix, suffix_length=5,  charset=LOWER,           priority=2),
-        AttackVector(prefix, suffix_length=5,  charset=DIGITS,          priority=2),
-        AttackVector(prefix, suffix_length=6,  charset=DIGITS,          priority=2),
-
-        # ── Priority 3: Wider charsets ──────────────────────────────
-        AttackVector(prefix, suffix_length=4,  charset=ALNUM + SYMBOLS, priority=3),
-        AttackVector(prefix, suffix_length=5,  charset=LOWER + DIGITS,  priority=3),
-        AttackVector(prefix, suffix_length=5,  charset=LETTERS,         priority=3),
-        AttackVector(prefix, suffix_length=6,  charset=LOWER,           priority=3),
-        AttackVector(prefix, suffix_length=7,  charset=DIGITS,          priority=3),
-        AttackVector(prefix, suffix_length=8,  charset=DIGITS,          priority=3),
-
-        # ── Priority 4: Extended search ─────────────────────────────
-        AttackVector(prefix, suffix_length=5,  charset=ALNUM,           priority=4),
-        AttackVector(prefix, suffix_length=6,  charset=LOWER + DIGITS,  priority=4),
-        AttackVector(prefix, suffix_length=7,  charset=LOWER,           priority=4),
-        AttackVector(prefix, suffix_length=9,  charset=DIGITS,          priority=4),
-        AttackVector(prefix, suffix_length=10, charset=DIGITS,          priority=4),
-
-        # ── Priority 5: Deep search ────────────────────────────────
-        AttackVector(prefix, suffix_length=6,  charset=LETTERS,         priority=5),
-        AttackVector(prefix, suffix_length=7,  charset=LOWER + DIGITS,  priority=5),
-        AttackVector(prefix, suffix_length=8,  charset=LOWER,           priority=5),
-        AttackVector(prefix, suffix_length=11, charset=DIGITS,          priority=5),
-        AttackVector(prefix, suffix_length=12, charset=DIGITS,          priority=5),
-
-        # ── Priority 6: Very deep search ───────────────────────────
-        AttackVector(prefix, suffix_length=7,  charset=LETTERS,         priority=6),
-        AttackVector(prefix, suffix_length=8,  charset=LOWER + DIGITS,  priority=6),
-        AttackVector(prefix, suffix_length=9,  charset=LOWER,           priority=6),
-
-        # ── Priority 7: Exhaustive ─────────────────────────────────
-        AttackVector(prefix, suffix_length=8,  charset=LETTERS,         priority=7),
-        AttackVector(prefix, suffix_length=9,  charset=LOWER + DIGITS,  priority=7),
-        AttackVector(prefix, suffix_length=10, charset=LOWER,           priority=7),
+        AttackVector(
+            prefix=prefix,
+            suffix_length=suffix_length,
+            charset=charset,
+            priority=priority,
+        )
+        for priority, suffix_length, charset in ATTACK_PLAN
     ]
-
-    # Process easiest vectors first within each priority tier
-    vectors.sort(key=lambda v: (v.priority, v.search_space))
+    vectors.sort(key=lambda vector: (vector.priority, vector.search_space))
     return vectors
