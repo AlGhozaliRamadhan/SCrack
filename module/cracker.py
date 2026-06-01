@@ -10,7 +10,7 @@ import hashlib
 import itertools
 import time
 from typing import List, Optional, Tuple
-from concurrent.futures import FIRST_COMPLETED, ProcessPoolExecutor, wait
+from concurrent.futures import FIRST_COMPLETED, ProcessPoolExecutor, ThreadPoolExecutor, wait
 
 from .config import (
     MAX_SEARCH_SPACE,
@@ -117,11 +117,7 @@ class SHA1Cracker:
             print()  # newline after progress bar
             return None
 
-        with ProcessPoolExecutor(
-            max_workers=len(device_ids),
-            initializer=set_stop_signal,
-            initargs=(stop_signal,),
-        ) as pool:
+        with ThreadPoolExecutor(max_workers=len(device_ids)) as pool:
             pending = {}
             batch_starts = iter(range(0, search_space, GPU_BATCH_SIZE))
             completed = 0
